@@ -1,6 +1,13 @@
 package API_tests;
 
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
+import io.restassured.filter.log.LogDetail;
+import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 
 import java.io.FileInputStream;
@@ -15,11 +22,17 @@ public abstract class BaseTest {
     private static String baseURl;
     private static String username;
     private static String hash;
+    private static int id;
+    protected static ResponseSpecification recipeResponseSpecification;
+    protected static RequestSpecification recipeRequestSpecification;
+    protected static RequestSpecification shoppingListRequestSpecification;
 
 
 
     @BeforeAll
     static void initTest() throws IOException {
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+
         in = new FileInputStream("src/main/resources/my.properties");
         properties.load(in);
 
@@ -27,8 +40,28 @@ public abstract class BaseTest {
         baseURl = properties.getProperty("baseURL");
         username = properties.getProperty("username");
         hash = properties.getProperty("hash");
+        id = Integer.parseInt(properties.getProperty("id"));
 
-        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+        recipeResponseSpecification = new ResponseSpecBuilder()
+                .expectStatusCode(200)
+                .expectStatusLine("HTTP/1.1 200 OK")
+                .expectContentType(ContentType.JSON)
+                .expectResponseTime(Matchers.lessThan(5000L))
+                .build();
+
+        recipeRequestSpecification = new RequestSpecBuilder()
+                .addQueryParam("apiKey", apiKey)
+                .setContentType(ContentType.JSON)
+                .log(LogDetail.ALL)
+                .build();
+
+        shoppingListRequestSpecification = new RequestSpecBuilder()
+                .addQueryParam("apiKey", apiKey)
+                .addQueryParam("hash", hash)
+                .log(LogDetail.ALL)
+                .build();
+
+
     }
 
     public static String getApiKey() {
@@ -45,5 +78,9 @@ public abstract class BaseTest {
 
     public static String getHash() {
         return hash;
+    }
+
+    public static int getId() {
+        return id;
     }
 }

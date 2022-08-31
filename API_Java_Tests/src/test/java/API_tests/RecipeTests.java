@@ -17,41 +17,30 @@ import static org.hamcrest.Matchers.*;
 
 
 public class RecipeTests extends BaseTest {
-
-    @Test
-    void getRecipePositiveTest() {
-        given()
-                .when()
-                .get("https://api.spoonacular.com/recipes/complexSearch?query=pasta&offset=5&number=15&cuisine=italian&apiKey=4807df7ec09c41dd8f9e7acd7d2a811a")
-                .then()
-                .statusCode(200);
-    }
-
     @Test
     void getRecipeWithParametersPositiveTest() {
         given()
-                .queryParam("apiKey", getApiKey())
+                .spec(recipeRequestSpecification)
                 .queryParam("query", "pasta")
                 .queryParam("number", "5")
                 .when()
-                .get(getBaseURl() + "recipes/complexSearch")
+                .get(getBaseURl() + EndPoints.searchRecipes)
                 .then()
-                .log().all()
-                .statusCode(200);
+                .spec(recipeResponseSpecification);
 
     }
 
     @Test
     void getInfoByIdTest() {
         String id = given()
-                .queryParam("apiKey", getApiKey())
+                .spec(recipeRequestSpecification)
                 .queryParam("query", "pasta")
                 .queryParam("cuisine", "italian")
                 .queryParam("includeIngredients", "tomato,cheese")
                 .when()
-                .get(getBaseURl() + "recipes/complexSearch")
+                .get(getBaseURl() + EndPoints.searchRecipes)
                 .then()
-                .statusCode(200)
+                .spec(recipeResponseSpecification)
                 .extract()
                 .jsonPath()
                 .get("results[0].id")
@@ -60,9 +49,9 @@ public class RecipeTests extends BaseTest {
         System.out.println(id);
 
         JsonPath response = given()
-                .queryParam("apiKey", getApiKey())
-                .when().log().all()
-                .get(getBaseURl() + "recipes/{id}/information", id)
+                .spec(recipeRequestSpecification)
+                .when()
+                .get(getBaseURl() + EndPoints.recipesInformation, id)
                 .body().prettyPeek()
                 .jsonPath();
         Assertions.assertAll(
@@ -78,17 +67,14 @@ public class RecipeTests extends BaseTest {
     @Test
     void getRecipeInfoWithAssertionsTest() {
         given()
-                .queryParam("apiKey", getApiKey())
-                .when().log().all()
-                .get(getBaseURl() + "recipes/{id}/information", 654835)
+                .spec(recipeRequestSpecification)
+                .when()
+                .get(getBaseURl() + EndPoints.recipesInformation, getId())
                 .then()
-                .assertThat()
-                .statusCode(200)
-                .statusLine(containsString("OK"))
-                .contentType(ContentType.JSON);
+                .spec(recipeResponseSpecification);
 
         given()
-                .queryParam("apiKey", getApiKey())
+                .spec(recipeRequestSpecification)
                 .queryParam("cuisine", "italian")
                 .queryParam("diet", "vegetarian")
                 .response()
@@ -100,18 +86,18 @@ public class RecipeTests extends BaseTest {
                 .body("healthScore", is(8))
                 .body("extendedIngredients[0].name", is("olive oil"))
                 .when()
-                .get(getBaseURl() + "recipes/{id}/information", 654835);
+                .get(getBaseURl() + EndPoints.recipesInformation, getId());
     }
 
     @Test
     void getTotalRecipeWithAssertionsTest() {
         JsonPath response = given()
-                .queryParam("apiKey", getApiKey())
+                .spec(recipeRequestSpecification)
                 .queryParam("query", "pasta")
                 .queryParam("cuisine", "italian")
                 .queryParam("includeIngredients", "tomato,cheese")
                 .when()
-                .get(getBaseURl() + "recipes/complexSearch")
+                .get(getBaseURl() + EndPoints.searchRecipes)
                 .body().prettyPeek()
                 .jsonPath();
         assertThat(response.get("totalResults"), equalTo(9));
@@ -123,10 +109,10 @@ public class RecipeTests extends BaseTest {
     @Test
     void addCuisineTest() {
         JsonPath response = given()
+                .spec(recipeRequestSpecification)
                 .queryParam("title", "burger")
-                .queryParam("apiKey", getApiKey())
                 .when()
-                .post(getBaseURl() + "recipes/cuisine")
+                .post(getBaseURl() + EndPoints.recipesCuisine)
                 .body().prettyPeek()
                 .jsonPath();
         assertThat(response.get("cuisine"), equalTo("American"));
