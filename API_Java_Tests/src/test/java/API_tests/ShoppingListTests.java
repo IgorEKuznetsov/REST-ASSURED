@@ -29,7 +29,7 @@ public class ShoppingListTests extends BaseTest {
         list.setAisle("water");
         list.setParse(true);
 
-        id = given()
+       id = given()
                 .spec(shoppingListRequestSpecification)
                 .body(list)
                 .when()
